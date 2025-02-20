@@ -7,7 +7,7 @@ import Dashboard from "./ui/dashboard.js";
 class HahaWallet {
   constructor() {
     this.dashboard = new Dashboard();
-    this.api = new HahaApi(getHeaders());
+    this.api = new HahaApi(getHeaders(), this.dashboard);
     this.accountService = new AccountService(this);
     this.taskService = new TaskService(this.api, this);
   }

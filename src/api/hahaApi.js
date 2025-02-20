@@ -4,18 +4,33 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { HttpProxyAgent } from "http-proxy-agent";
 
 class HahaApi {
-  constructor(headers) {
+  constructor(headers, dashboard) {
     this.headers = headers;
     this.baseUrl = "https://prod.haha.me";
+    this.dashboard = dashboard; // ✅ Use the passed dashboard instance
 
     this.proxies = this.loadProxies();
     this.proxyIndex = 0;
-
     this.currentProxy = this.getNextProxy();
-    
+
     this.axiosInstance = this.createAxiosInstance();
-    
     this.logCurrentProxyIP();
+  }
+
+  setDashboardStatus(message) {
+    if (this.dashboard) {
+      this.dashboard.setStatus(message);
+    } else {
+      console.log(`[STATUS] ${message}`);
+    }
+  }
+
+  logTask(message) {
+    if (this.dashboard) {
+      this.dashboard.logTask(message);
+    } else {
+      console.log(`[TASK] ${message}`);
+    }
   }
 
   loadProxies() {
@@ -26,12 +41,12 @@ class HahaApi {
         .filter((line) => line.startsWith("http"));
 
       if (proxies.length === 0) {
-        console.log(" No proxies found! Using default connection.");
+        this.setDashboardStatus(" No proxies found! Using default connection.");
       }
 
       return proxies;
     } catch (error) {
-      console.error(" Error reading proxies.txt:", error.message);
+      this.setDashboardStatus(" Error reading proxies.txt: " + error.message);
       return [];
     }
   }
@@ -46,11 +61,9 @@ class HahaApi {
 
   createAxiosInstance() {
     if (!this.currentProxy) {
-      console.log(" Using direct connection (No Proxy)");
+      this.setDashboardStatus(" Using direct connection (No Proxy)");
       return axios.create({ timeout: 30000 });
     }
-
-    console.log(`🛠️ Using Proxy: ${this.currentProxy}`);
 
     const isHttp = this.currentProxy.startsWith("http://");
     const agent = isHttp ? new HttpProxyAgent(this.currentProxy) : new HttpsProxyAgent(this.currentProxy);
@@ -65,22 +78,22 @@ class HahaApi {
 
   async logCurrentProxyIP() {
     if (!this.currentProxy) {
-      console.log(" Using direct connection (No Proxy)");
+      this.setDashboardStatus("🔹 Using direct connection (No Proxy)");
       return;
     }
 
     try {
       const response = await this.axiosInstance.get("http://api64.ipify.org?format=json");
-      console.log(` Proxy IP: ${response.data.ip}`);
+      this.setDashboardStatus(`Proxy IP: ${response.data.ip}`);
     } catch (error) {
-      console.log(" Failed to fetch proxy IP.");
+      this.setDashboardStatus("Failed to fetch proxy IP.");
     }
   }
 
   switchProxy() {
     this.currentProxy = this.getNextProxy();
     this.axiosInstance = this.createAxiosInstance();
-    console.log(` Switched to next proxy`);
+    this.setDashboardStatus(`Switched to next proxy`);
     this.logCurrentProxyIP();
   }
 
@@ -103,6 +116,8 @@ class HahaApi {
   }
 
   async userLogin(email, password) {
+    this.logCurrentProxyIP();
+
     const response = await this.fetch(`${this.baseUrl}/users/login`, "POST", null, { email, password });
     return response ? response.id_token : null;
   }
