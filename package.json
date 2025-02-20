@@ -18,6 +18,8 @@
     "axios": "^1.7.9",
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.11.0",
+    "http-proxy-agent": "^7.0.2",
+    "https-proxy-agent": "^7.0.6",
     "moment-timezone": "^0.5.47"
   }
 }
