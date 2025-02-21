@@ -50,19 +50,22 @@ class HahaWallet {
   async processAccounts(accounts) {
     for (const account of accounts) {
       if (account?.email && account?.password) {
+        this.api.switchProxy(); 
+  
         const maskedEmail = this.accountService.maskAccount(account.email);
         this.updateDashboard("account", `Processing: ${maskedEmail}`);
-
+  
         await this.taskService.processAccount(
           account.email,
           account.password,
           (component, content) => this.updateDashboard(component, content)
         );
-
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+  
+        await new Promise((resolve) => setTimeout(resolve, 3000)); 
       }
     }
   }
+  
 
   async main() {
     try {

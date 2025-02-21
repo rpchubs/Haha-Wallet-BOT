@@ -40,7 +40,7 @@ Before installing, make sure you have:
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/rpchubs/Haha-Wallet-BOT
-   cd HaHa-Wallet-BOT
+   cd Haha-Wallet-BOT
    ```
 2. **Install dependencies**:
    ```bash

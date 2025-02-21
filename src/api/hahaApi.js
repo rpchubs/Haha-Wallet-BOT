@@ -53,9 +53,11 @@ class HahaApi {
 
   getNextProxy() {
     if (this.proxies.length === 0) return null;
-
+  
     const proxy = this.proxies[this.proxyIndex];
     this.proxyIndex = (this.proxyIndex + 1) % this.proxies.length;
+  
+    this.setDashboardStatus(`Switching to Proxy: ${proxy.split("@")[1] || proxy}`);
     return proxy;
   }
 
@@ -64,10 +66,21 @@ class HahaApi {
       this.setDashboardStatus(" Using direct connection (No Proxy)");
       return axios.create({ timeout: 30000 });
     }
-
+  
     const isHttp = this.currentProxy.startsWith("http://");
-    const agent = isHttp ? new HttpProxyAgent(this.currentProxy) : new HttpsProxyAgent(this.currentProxy);
-
+    
+    const hasAuth = this.currentProxy.includes("@"); 
+    
+    let agent;
+    if (hasAuth) {
+      agent = isHttp ? new HttpProxyAgent(this.currentProxy) : new HttpsProxyAgent(this.currentProxy);
+    } else {
+      const proxyOptions = new URL(this.currentProxy);
+      agent = isHttp 
+        ? new HttpProxyAgent({ host: proxyOptions.hostname, port: proxyOptions.port })
+        : new HttpsProxyAgent({ host: proxyOptions.hostname, port: proxyOptions.port });
+    }
+  
     return axios.create({
       timeout: 30000,
       proxy: false,
@@ -75,6 +88,7 @@ class HahaApi {
       httpsAgent: !isHttp ? agent : undefined,
     });
   }
+  
 
   async logCurrentProxyIP() {
     if (!this.currentProxy) {
